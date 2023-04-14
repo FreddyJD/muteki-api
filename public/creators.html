@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+    }
+
+    .ad-container {
+      position: relative;
+      width: 340px;
+      height: 120px;
+      overflow: hidden;
+      margin-right: 200px;
+    }
+
+    .slideshow {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform: translateX(100%);
+      transition: transform 1s;
+    }
+
+    .slideshow img {
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="ad-container" id="adContainer"></div>
+
+  <script>
+class AdSlideshow {
+  constructor(container) {
+    this.container = container;
+    this.slides = [];
+    this.currentIndex = 0;
+    this.intervalId = null;
+  }
+
+  async updateSlides() {
+    const response = await fetch('/api/ads');
+    const imageURLs = await response.json();
+    this.slides = imageURLs.map(url => {
+      const slide = document.createElement('div');
+      slide.className = 'slideshow';
+      slide.innerHTML = `<img src="${url}" alt="Ad">`;
+      return slide;
+    });
+
+    this.renderSlides();
+  }
+
+  renderSlides() {
+    this.container.innerHTML = '';
+    this.slides.forEach((slide, index) => {
+      this.container.appendChild(slide);
+      slide.style.zIndex = this.slides.length - index;
+      slide.style.transform = index === 0 ? 'translateX(0)' : 'translateX(100%)';
+    });
+  }
+
+  start() {
+    this.updateSlides();
+    setInterval(() => {
+      this.showNextSlide();
+    }, 5000);
+    setInterval(() => {
+      this.updateSlides();
+    }, 15000);
+  }
+
+  showNextSlide() {
+    if (this.slides.length === 0) return;
+    this.slides[this.currentIndex].style.transform = 'translateX(-100%)';
+    this.currentIndex = (this.currentIndex + 1) % this.slides.length;
+    this.slides[this.currentIndex].style.transform = 'translateX(0)';
+  }
+}
+
+const adContainer = document.getElementById('adContainer');
+const adSlideshow = new AdSlideshow(adContainer);
+adSlideshow.start();
+  </script>
+</body>
+</html>
